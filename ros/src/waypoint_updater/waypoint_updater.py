@@ -4,6 +4,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
 from scipy.spatial import KDTree
+import numpy as np
 
 import math
 
@@ -62,7 +63,7 @@ class WaypointUpdater(object):
         prev_coord = np.array(self.waypoints_2d[closest_ndx - 1])
         current_pos = np.array([x,y])
         
-        dot_prod = np.dot(closet_coord - prev_coord, current_pos - closest_coord)
+        dot_prod = np.dot(closest_coord - prev_coord, current_pos - closest_coord)
         if dot_prod > 0:
             closest_ndx = (closest_ndx + 1) % len(self.waypoints_2d)
             
