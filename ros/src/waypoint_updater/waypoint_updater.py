@@ -32,7 +32,7 @@ class WaypointUpdater(object):
 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
+        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
 
 
@@ -70,10 +70,44 @@ class WaypointUpdater(object):
         return closest_ndx
         
     def publish_waypoints(self, closest_ndx):
-        lane = Lane()
+        lane = generate_lane()
         #lane.header = self.base_waypoints.header
-        lane.waypoints = self.base_waypoints.waypoints[closest_ndx:closest_ndx + LOOKAHEAD_WPS]       
         self.final_waypoints_pub.publish(lane)
+        
+    def generate_lane(self):
+        lane = Lane()
+        
+        closest_ndx = self.get_closest_waypoint_ndx()
+        farthest_ndx = closest_ndx + LOOKAHEAD_WPS
+        base_waypoints = self.base_waypoints.waypoints[closest_ndx:closest_ndx + LOOKAHEAD_WPS]
+        if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_ndx):
+            lane.waypoints = base_waypoints
+        else:
+            lane.waypoints = decelerate_waypoints(base_waypoints, closest_ndx)
+        
+        return lane
+        
+        
+    def decelerate_waypoints(self, waypoints, closest_ndx):
+        
+        stop_ndx = max(self.stopine_wp_ndx - closestndx -2, 0)
+        old_vel = waypoints[stop_ndx].twist.twist.linear.x
+        
+        dist_for_decel = old_vel*old_vel/(2.0*MAX_DECEL * 0.8) # distance for linear decel to zero at 80% of MAX_DECEL
+        new_waypoints = []
+        
+        for i, wp in enumerate(waypoints)
+            p = Waypoint()
+            p.pose = wp.pose
+            
+            dist = self.distance(waypoints, i, stop_ndx)
+            vel = (dist-dist_for_decel)/dist_for_decel*old_vel + old_vel
+            if vel < 0.25:
+                vel = 0.0
+            p.twist.twist.linear.x = min(vel, wp.twist.twist.x)
+            new_waypoints.append(p)
+            
+        return new_waypoints
         
     def pose_cb(self, msg):
         # TODO: Implement
@@ -88,7 +122,7 @@ class WaypointUpdater(object):
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
-        pass
+        self.stopline_wp_idx = msg.data
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
