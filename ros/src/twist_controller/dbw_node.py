@@ -78,7 +78,7 @@ class DBWNode(object):
             # You should only publish the control commands if dbw is enabled
              if not None in (self.current_vel, self.linear_vel, self.angular_vel):
                 self.throttle, self.brake, self.SWA = self.controller.control(self.current_vel,  self.linear_vel, self.angular_vel, self.dbw_enabled)
-	        rospy.logwarn("velocity request: {0}".format(self.linear_vel))
+	       # rospy.logwarn("velocity request: {0}".format(self.linear_vel))
              if (self.dbw_enabled):
                self.publish(self.throttle, self.brake, self.SWA)
              rate.sleep()

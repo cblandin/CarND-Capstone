@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
 from scipy.spatial import KDTree
@@ -43,13 +44,14 @@ class WaypointUpdater(object):
         self.base_waypoints = None
         self.waypoints_2d = None
         self.waypoint_tree = None
+	self.stopline_wp_ndx = -1
         self.loop()
         
         
     def loop(self):
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
-            if self.pose and self.base_waypoints: # then get closest waypoints
+            if self.pose and self.base_waypoints and self.waypoint_tree: # then get closest waypoints
                 closest_waypoint_ndx = self.get_closest_waypoint_ndx()
                 self.publish_waypoints(closest_waypoint_ndx)
             rate.sleep()
@@ -70,7 +72,7 @@ class WaypointUpdater(object):
         return closest_ndx
         
     def publish_waypoints(self, closest_ndx):
-        lane = generate_lane()
+        lane = self.generate_lane()
         #lane.header = self.base_waypoints.header
         self.final_waypoints_pub.publish(lane)
         
@@ -80,23 +82,23 @@ class WaypointUpdater(object):
         closest_ndx = self.get_closest_waypoint_ndx()
         farthest_ndx = closest_ndx + LOOKAHEAD_WPS
         base_waypoints = self.base_waypoints.waypoints[closest_ndx:closest_ndx + LOOKAHEAD_WPS]
-        if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_ndx):
+        if self.stopline_wp_ndx == -1 or (self.stopline_wp_ndx >= farthest_ndx):
             lane.waypoints = base_waypoints
         else:
-            lane.waypoints = decelerate_waypoints(base_waypoints, closest_ndx)
+            lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_ndx)
         
         return lane
         
         
     def decelerate_waypoints(self, waypoints, closest_ndx):
         
-        stop_ndx = max(self.stopine_wp_ndx - closestndx -2, 0)
+        stop_ndx = max(self.stopline_wp_ndx - closest_ndx -2, 0)
         old_vel = waypoints[stop_ndx].twist.twist.linear.x
         
         dist_for_decel = old_vel*old_vel/(2.0*MAX_DECEL * 0.8) # distance for linear decel to zero at 80% of MAX_DECEL
         new_waypoints = []
         
-        for i, wp in enumerate(waypoints)
+        for i, wp in enumerate(waypoints):
             p = Waypoint()
             p.pose = wp.pose
             
@@ -116,13 +118,14 @@ class WaypointUpdater(object):
     def waypoints_cb(self, waypoints):
         # TODO: Implement
         self.base_waypoints = waypoints
-        if not self.waypoints_2d:
+        if not self.waypoint_tree:
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             self.waypoint_tree = KDTree(self.waypoints_2d)
+	    rospy.logwarn("KD Tree Set")
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
-        self.stopline_wp_idx = msg.data
+        self.stopline_wp_ndx = msg.data
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
