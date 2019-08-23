@@ -45,6 +45,7 @@ class WaypointUpdater(object):
         self.waypoints_2d = None
         self.waypoint_tree = None
 	self.stopline_wp_ndx = -1
+	self.max_decel = rospy.get_param('~decel_limit', -5)
         self.loop()
         
         
@@ -95,7 +96,7 @@ class WaypointUpdater(object):
         stop_ndx = max(self.stopline_wp_ndx - closest_ndx -2, 0)
         old_vel = waypoints[stop_ndx].twist.twist.linear.x
         
-        dist_for_decel = old_vel*old_vel/(2.0*MAX_DECEL * 0.8) # distance for linear decel to zero at 80% of MAX_DECEL
+        dist_for_decel = old_vel*old_vel/(2.0*self.max_decel * 0.8) # distance for linear decel to zero at 80% of MAX_DECEL
         new_waypoints = []
         
         for i, wp in enumerate(waypoints):
@@ -106,7 +107,7 @@ class WaypointUpdater(object):
             vel = (dist-dist_for_decel)/dist_for_decel*old_vel + old_vel
             if vel < 0.25:
                 vel = 0.0
-            p.twist.twist.linear.x = min(vel, wp.twist.twist.x)
+            p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
             new_waypoints.append(p)
             
         return new_waypoints
@@ -125,7 +126,8 @@ class WaypointUpdater(object):
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
-        self.stopline_wp_ndx = msg.data
+        #rospy.logwarn("Stop_light_received: {0}".format(msg.data))
+	self.stopline_wp_ndx = msg.data
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
