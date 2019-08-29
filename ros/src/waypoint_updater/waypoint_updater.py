@@ -46,11 +46,10 @@ class WaypointUpdater(object):
         self.waypoint_tree = None
 	self.stopline_wp_ndx = -1
 	self.max_decel = rospy.get_param('~decel_limit', -5)
-        self.loop()
-        
+        self.loop() 
         
     def loop(self):
-        rate = rospy.Rate(50)
+        rate = rospy.Rate(30)
         while not rospy.is_shutdown():
             if self.pose and self.base_waypoints and self.waypoint_tree: # then get closest waypoints
                 closest_waypoint_ndx = self.get_closest_waypoint_ndx()
@@ -73,19 +72,19 @@ class WaypointUpdater(object):
         return closest_ndx
         
     def publish_waypoints(self, closest_ndx):
-        lane = self.generate_lane()
+        lane = self.generate_lane(closest_ndx)
         #lane.header = self.base_waypoints.header
         self.final_waypoints_pub.publish(lane)
         
-    def generate_lane(self):
+    def generate_lane(self,closest_ndx):
         lane = Lane()
-        
-        closest_ndx = self.get_closest_waypoint_ndx()
         farthest_ndx = closest_ndx + LOOKAHEAD_WPS
         base_waypoints = self.base_waypoints.waypoints[closest_ndx:closest_ndx + LOOKAHEAD_WPS]
+#	rospy.logwarn("Stopline_wp_ndx : {0}".format(self.stopline_wp_ndx))
         if self.stopline_wp_ndx == -1 or (self.stopline_wp_ndx >= farthest_ndx):
             lane.waypoints = base_waypoints
         else:
+#	    rospy.logwarn("DECEL")
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_ndx)
         
         return lane
@@ -96,18 +95,19 @@ class WaypointUpdater(object):
         stop_ndx = max(self.stopline_wp_ndx - closest_ndx -2, 0)
         old_vel = waypoints[stop_ndx].twist.twist.linear.x
         
-        dist_for_decel = old_vel*old_vel/(2.0*self.max_decel * 0.8) # distance for linear decel to zero at 80% of MAX_DECEL
+        dist_for_decel = abs(old_vel*old_vel/(2.0*self.max_decel * 0.6)) # distance for linear decel to zero at 60% of MAX_DECEL
         new_waypoints = []
         
         for i, wp in enumerate(waypoints):
             p = Waypoint()
             p.pose = wp.pose
             
-            dist = self.distance(waypoints, i, stop_ndx)
+            dist = self.distance(waypoints, i, stop_ndx) #distance to stoplight
             vel = (dist-dist_for_decel)/dist_for_decel*old_vel + old_vel
+#	    rospy.logwarn("Vel : {0}".format(dist_for_decel))
             if vel < 0.25:
                 vel = 0.0
-            p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
+            p.twist.twist.linear.x = min(vel, old_vel)
             new_waypoints.append(p)
             
         return new_waypoints

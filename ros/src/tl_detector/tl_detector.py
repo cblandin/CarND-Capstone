@@ -49,10 +49,21 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
-        
+	self.waypoints = None
         self.waypoint_tree = None
+	self.loop()
+       # rospy.spin()
 
-        rospy.spin()
+    def loop(self):
+	rate = rospy.Rate(10)
+	while not rospy.is_shutdown():
+#		rospy.logwarn("LOOP TL_DETECTOR {0}".format(self.waypoints is None))
+		if self.waypoint_tree is not None and self.pose is not None and self.waypoints is not None:
+#			rospy.logwarn("Process_Lights")
+			light_wp, state = self.process_traffic_lights()
+			self.upcoming_red_light_pub.publish(Int32(light_wp))
+#			rospy.logwarn("Light_WP {0}".format(light_wp))
+		rate.sleep()
 
     def pose_cb(self, msg):
         self.pose = msg
@@ -64,7 +75,7 @@ class TLDetector(object):
             self.waypoint_tree = KDTree([[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints])
 
     def traffic_cb(self, msg):
-	#rospy.logwarn("Traffic Lights Recieved")
+#	rospy.logwarn("Traffic Lights Recieved")
         self.lights = msg.lights
 
     def image_cb(self, msg):
@@ -140,6 +151,7 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+	
         closest_light = None
         line_wp_ndx = None
         
@@ -159,11 +171,13 @@ class TLDetector(object):
                     closest_light = light
                     line_wp_ndx = temp_wp_ndx
 	#rospy.logwarn("Traffic Light Returned")
-        if light:
-            state = self.get_light_state(light)
-            return line_wp_ndx, state
-        self.waypoints = None
-        return -1, TrafficLight.UNKNOWN
+        if closest_light is not None:
+            state = self.get_light_state(closest_light)
+	    if state == 0:
+#		rospy.logwarn("Traffic state: {0}".format(line_wp_ndx)) 
+           	return line_wp_ndx, state
+       	    else:
+        	return -1, TrafficLight.UNKNOWN
 
 if __name__ == '__main__':
     try:
