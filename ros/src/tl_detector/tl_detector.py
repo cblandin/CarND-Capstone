@@ -170,7 +170,7 @@ class TLDetector(object):
 	#rospy.logwarn("Traffic Light Returned")
         if closest_light is not None:
             state = self.get_light_state(closest_light)
-	    if state == 0:
+	    if state == 0 or state == 1:
 #		rospy.logwarn("Traffic state: {0}".format(line_wp_ndx)) 
            	return line_wp_ndx, state
        	    else:

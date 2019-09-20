@@ -18,7 +18,7 @@ class TLClassifier(object):
                 serialized_graph = fileID.read()
                 graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(graph_def, name='')
-        self.sess = tf.Session()
+            self.sess = tf.Session()
 
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
@@ -43,7 +43,7 @@ class TLClassifier(object):
             else:
                 image = cv2.resize(image,(int(height*1000/width), 1000))
 
-        
+        image = [image]
         #with self.model.as_default():
         image_tensor = self.model.get_tensor_by_name('image_tensor:0')
         boxes_tensor = self.model.get_tensor_by_name('detection_boxes:0')
@@ -51,8 +51,8 @@ class TLClassifier(object):
         classes_tensor = self.model.get_tensor_by_name('detection_classes:0')
         detections_tensor = self.model.get_tensor_by_name('num_detections:0')
             
-            
-            N, boxes, scores, labels = self.sess.run([detections_tensor, boxes_tensor, scores_tensor, classes_tensor], feed_dict = {image_tensor:image})
+	with self.model.as_default():
+	    N, boxes, scores, labels = self.sess.run([detections_tensor, boxes_tensor, scores_tensor, classes_tensor], feed_dict = {image_tensor:image})
         
         
         scores = np.squeeze(scores)
@@ -61,14 +61,14 @@ class TLClassifier(object):
         
         max_i = np.argmax(scores)
         
-	rospy.logwarn("Traffic Light: {0}".format(labels[max_i]))        
+#	rospy.logwarn("Traffic Light: {0}".format(labels[max_i]))        
         if scores[max_i] > 0.7:
-            if labels[max_i] == 0:
-                return TrafficLight.GREENLIGHT
-            elif labels[max_i] == 1:
-                return TrafficLight.YELLOWLIGHT
+            if labels[max_i] == 1:
+                return TrafficLight.GREEN
             elif labels[max_i] == 2:
-                return TrafficLight.REDLIGHT
+                return TrafficLight.YELLOW
+            elif labels[max_i] == 3:
+                return TrafficLight.RED
         
         
         return TrafficLight.UNKNOWN
