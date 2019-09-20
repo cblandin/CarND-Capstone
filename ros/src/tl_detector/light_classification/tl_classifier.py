@@ -1,9 +1,8 @@
 from styx_msgs.msg import TrafficLight
 import numpy as np
-import ropsy
+import rospy
 import cv2
-from imutils import *
-
+import tensorflow as tf
 
 
 
@@ -15,8 +14,8 @@ class TLClassifier(object):
         self.model = tf.Graph()
         with self.model.as_default():
             graph_def = tf.GraphDef()
-            with tf.gfile.GFile("/home/student/Documents/CarND-Capston/ros/src/tl_detector/light_classification/graph_optimized.pb",'rb') as fileID:
-                serialized_graph = fid.read()
+            with tf.gfile.GFile("/home/student/Documents/CarND-Capstone/ros/src/tl_detector/light_classification/graph_optimized.pb",'rb') as fileID:
+                serialized_graph = fileID.read()
                 graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(graph_def, name='')
         self.sess = tf.Session()
@@ -40,9 +39,9 @@ class TLClassifier(object):
         
         if height > 1000 or width > 1000:
             if height > width:
-                image = imutils.resize(image, height = 1000)
+                image = cv2.resize(image, (1000,int(width*1000/height)))
             else:
-                image = imutils.resize(image, width = 1000)  
+                image = cv2.resize(image,(int(height*1000/width), 1000))
 
         
         with self.model.as_default():
@@ -53,7 +52,7 @@ class TLClassifier(object):
             detections_tensor = graph.get_tensor_by_name('num_detections:0')
             
             
-            N, boxes, scores, labels = self.sess.run([detections_tensor, boxes_tensor, scores_tensor, classes_tensor], feed_dict = {image_tensor:image})-=
+            N, boxes, scores, labels = self.sess.run([detections_tensor, boxes_tensor, scores_tensor, classes_tensor], feed_dict = {image_tensor:image})
         
         
         scores = np.squeeze(scores)
@@ -68,7 +67,7 @@ class TLClassifier(object):
                 return TrafficLight.GREENLIGHT
             elif labels[max_i] == 1:
                 return TrafficLight.YELLOWLIGHT
-            elif labels[max_i] = 2:
+            elif labels[max_i] == 2:
                 return TrafficLight.REDLIGHT
         
         
