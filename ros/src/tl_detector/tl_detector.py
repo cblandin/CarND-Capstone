@@ -21,6 +21,7 @@ class TLDetector(object):
         self.pose = None
         self.waypoints = None
         self.camera_image = None
+	self.has_image = False
         self.lights = []
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
@@ -55,10 +56,10 @@ class TLDetector(object):
        # rospy.spin()
 
     def loop(self):
-	rate = rospy.Rate(1)
+	rate = rospy.Rate(4)
 	while not rospy.is_shutdown():
 #		rospy.logwarn("LOOP TL_DETECTOR {0}".format(self.waypoints is None))
-		if self.waypoint_tree is not None and self.pose is not None and self.waypoints is not None:
+		if self.has_image and self.waypoint_tree is not None and self.pose is not None and self.waypoints is not None:
 #			rospy.logwarn("Process_Lights")
 			light_wp, state = self.process_traffic_lights()
 			self.upcoming_red_light_pub.publish(Int32(light_wp))
@@ -86,17 +87,24 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
-        """
-        self.has_image = True
-        self.camera_image = msg
-        light_wp, state = self.process_traffic_lights()
+        if self.state_count == 0:
+	   self.has_image = True
+           self.camera_image = msg
+           light_wp, state = self.process_traffic_lights()
+	else:
+	   self.has_image = False
 
-        '''
+	self.state_count = self.state_count + 1
+        if self.state_count > 5:
+	   self.state_count = 1
+
+	'''
         Publish upcoming red lights at camera frequency.
         Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
         of times till we start using it. Otherwise the previous stable state is
         used.
         '''
+	"""
         if self.state != state:
             self.state_count = 0
             self.state = state
