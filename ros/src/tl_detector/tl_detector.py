@@ -87,17 +87,16 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
-<<<<<<< HEAD
         if self.state_count == 0:
-	   self.has_image = True
-           self.camera_image = msg
-           light_wp, state = self.process_traffic_lights()
-	else:
-	   self.has_image = False
+            self.has_image = True
+            self.camera_image = msg
+            light_wp, state = self.process_traffic_lights()
+        else:
+            self.has_image = False
 
-	self.state_count = self.state_count + 1
-        if self.state_count > 5:
-	   self.state_count = 1
+        self.state_count = self.state_count + 1
+            if self.state_count > 5:
+                self.state_count = 0
 
 	'''
 =======
@@ -107,24 +106,7 @@ class TLDetector(object):
         light_wp, state = self.process_traffic_lights()
 
         '''
->>>>>>> 7d9fa5e19f2344b5b5db97a69ed2911e315ff7f9
-        Publish upcoming red lights at camera frequency.
-        Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
-        of times till we start using it. Otherwise the previous stable state is
-        used.
-        '''
-	"""
-        if self.state != state:
-            self.state_count = 0
-            self.state = state
-        elif self.state_count >= STATE_COUNT_THRESHOLD:
-            self.last_state = self.state
-            light_wp = light_wp if state == TrafficLight.RED else -1
-            self.last_wp = light_wp
-            self.upcoming_red_light_pub.publish(Int32(light_wp))
-        else:
-            self.upcoming_red_light_pub.publish(Int32(self.last_wp))
-        self.state_count += 1
+
         
     def get_closest_waypoint(self, x, y):
         """Identifies the closest path waypoint to the given position
