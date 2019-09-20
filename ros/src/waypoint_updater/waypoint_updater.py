@@ -44,8 +44,8 @@ class WaypointUpdater(object):
         self.base_waypoints = None
         self.waypoints_2d = None
         self.waypoint_tree = None
-	self.stopline_wp_ndx = -1
-	self.max_decel = rospy.get_param('~decel_limit', -5)
+        self.stopline_wp_ndx = -1
+        self.max_decel = rospy.get_param('~decel_limit', -5)
         self.loop() 
         
     def loop(self):
