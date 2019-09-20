@@ -101,7 +101,7 @@ class TLDetector(object):
             self.has_image = False
         self.state_count = self.state_count + 1
         if self.state_count > 5:
-                self.state_count = 0
+            self.state_count = 0
 
 
 
@@ -171,11 +171,11 @@ class TLDetector(object):
 	#rospy.logwarn("Traffic Light Returned")
         if closest_light is not None:
             state = self.get_light_state(closest_light)
-	    if state == 0 or state == 1:
+	if state == 0 or state == 1:
 #		rospy.logwarn("Traffic state: {0}".format(line_wp_ndx)) 
-           	return line_wp_ndx, state
+            return line_wp_ndx, state
         else:
-        	return -1, TrafficLight.UNKNOWN
+            return -1, TrafficLight.UNKNOWN
 
 if __name__ == '__main__':
     try:

@@ -92,7 +92,7 @@ class WaypointUpdater(object):
         
     def decelerate_waypoints(self, waypoints, closest_ndx):
         
-        stop_ndx = max(self.stopline_wp_ndx - closest_ndx -2, 0)
+        stop_ndx = max(self.stopline_wp_ndx - closest_ndx -8, 0)
         old_vel = waypoints[stop_ndx].twist.twist.linear.x
         
         dist_for_decel = abs(old_vel*old_vel/(2.0*self.max_decel * 0.6)) # distance for linear decel to zero at 60% of MAX_DECEL
