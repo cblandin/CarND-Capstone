@@ -52,6 +52,8 @@ class TLDetector(object):
         self.state_count = 0
 	self.waypoints = None
         self.waypoint_tree = None
+	rospy.logwarn("init waypoint_tree: {0}".format(self.waypoint_tree))
+
 	self.loop()
        # rospy.spin()
 
@@ -71,7 +73,8 @@ class TLDetector(object):
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
-        if not self.waypoint_tree:
+	rospy.logwarn("waypoint tree:{0}".format(self.waypoint_tree))
+        if self.waypoint_tree is None:
             #self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             self.waypoint_tree = KDTree([[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints])
 
@@ -90,7 +93,7 @@ class TLDetector(object):
         if self.state_count == 0:
             self.has_image = True
             self.camera_image = msg
-            light_wp, state = self.process_traffic_lights()
+#            light_wp, state = self.process_traffic_lights()
         else:
             self.has_image = False
 
@@ -98,14 +101,7 @@ class TLDetector(object):
         if self.state_count > 5:
                 self.state_count = 0
 
-	'''
-=======
-        
-        self.has_image = True
-        self.camera_image = msg
-        light_wp, state = self.process_traffic_lights()
 
-        '''
 
         
     def get_closest_waypoint(self, x, y):

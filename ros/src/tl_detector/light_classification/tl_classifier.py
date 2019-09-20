@@ -61,7 +61,7 @@ class TLClassifier(object):
         
         max_i = np.argmax(scores)
         
-        
+	rospy.logwarn("Traffic Light: {0}".format(labels[max_i]))        
         if scores[max_i] > 0.7:
             if labels[max_i] == 0:
                 return TrafficLight.GREENLIGHT
