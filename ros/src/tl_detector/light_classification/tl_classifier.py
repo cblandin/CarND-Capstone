@@ -44,12 +44,12 @@ class TLClassifier(object):
                 image = cv2.resize(image,(int(height*1000/width), 1000))
 
         
-        with self.model.as_default():
-            image_tensor = graph.get_tensor_by_name('image_tensor:0')
-            boxes_tensor = graph.get_tensor_by_name('detection_boxes:0')
-            scores_tensor = graph.get_tensor_by_name('detection_scores:0')
-            classes_tensor = graph.get_tensor_by_name('detection_classes:0')
-            detections_tensor = graph.get_tensor_by_name('num_detections:0')
+        #with self.model.as_default():
+        image_tensor = self.model.get_tensor_by_name('image_tensor:0')
+        boxes_tensor = self.model.get_tensor_by_name('detection_boxes:0')
+        scores_tensor = self.model.get_tensor_by_name('detection_scores:0')
+        classes_tensor = self.model.get_tensor_by_name('detection_classes:0')
+        detections_tensor = self.model.get_tensor_by_name('num_detections:0')
             
             
             N, boxes, scores, labels = self.sess.run([detections_tensor, boxes_tensor, scores_tensor, classes_tensor], feed_dict = {image_tensor:image})
