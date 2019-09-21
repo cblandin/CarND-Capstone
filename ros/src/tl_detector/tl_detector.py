@@ -95,7 +95,7 @@ class TLDetector(object):
             self.has_image = False
 
         self.state_count = self.state_count + 1
-            if self.state_count > 5:
+        if self.state_count > 5:
                 self.state_count = 0
 
 	'''
