@@ -49,7 +49,7 @@ class TLDetector(object):
         self.state_count = 0
         self.waypoints = None
         self.waypoint_tree = None
-        rospy.logwarn("init waypoint_tree: {0}".format(self.waypoint_tree))
+        #rospy.logwarn("init waypoint_tree: {0}".format(self.waypoint_tree))
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
@@ -74,7 +74,7 @@ class TLDetector(object):
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
-	rospy.logwarn("waypoint tree:{0}".format(self.waypoint_tree))
+        #rospy.logwarn("waypoint tree:{0}".format(self.waypoint_tree))
         if self.waypoint_tree is None:
             #self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             self.waypoint_tree = KDTree([[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints])
@@ -91,13 +91,14 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
+        
+        # For latency issues when camera is turned on, only classify every 5 images
         if self.state_count == 0:
             self.has_image = True
             self.camera_image = msg
 #            light_wp, state = self.process_traffic_lights()
         else:
             self.has_image = False
-
         self.state_count = self.state_count + 1
         if self.state_count > 5:
                 self.state_count = 0
@@ -115,7 +116,7 @@ class TLDetector(object):
             int: index of the closest waypoint in self.waypoints
 
         """
-        #TODO implement
+        # implement
         return self.waypoint_tree.query([x,y],1)[1]
 
     def get_light_state(self, light):
@@ -157,7 +158,7 @@ class TLDetector(object):
         if(self.pose and self.waypoint_tree):
             car_wp_ndx = self.get_closest_waypoint(self.pose.pose.position.x, self.pose.pose.position.y)
 
-            #TODO find the closest visible traffic light (if one exists)
+            # find the closest visible traffic light (if one exists)
             diff = len(self.waypoints.waypoints)
             for i, light in enumerate(self.lights):
                 line = stop_line_positions[i]  #Get stop line waypoint index
@@ -173,7 +174,7 @@ class TLDetector(object):
 	    if state == 0 or state == 1:
 #		rospy.logwarn("Traffic state: {0}".format(line_wp_ndx)) 
            	return line_wp_ndx, state
-       	    else:
+        else:
         	return -1, TrafficLight.UNKNOWN
 
 if __name__ == '__main__':

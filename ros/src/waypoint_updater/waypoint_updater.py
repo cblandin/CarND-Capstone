@@ -113,21 +113,19 @@ class WaypointUpdater(object):
         return new_waypoints
         
     def pose_cb(self, msg):
-        # TODO: Implement
         self.pose = msg
 
     def waypoints_cb(self, waypoints):
-        # TODO: Implement
         self.base_waypoints = waypoints
         if not self.waypoint_tree:
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             self.waypoint_tree = KDTree(self.waypoints_2d)
-	    rospy.logwarn("KD Tree Set")
+	    #rospy.logwarn("KD Tree Set")
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
         #rospy.logwarn("Stop_light_received: {0}".format(msg.data))
-	self.stopline_wp_ndx = msg.data
+        self.stopline_wp_ndx = msg.data
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
